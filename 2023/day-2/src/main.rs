@@ -19,6 +19,17 @@ fn main() {
         acc
     });
     dbg!(part_1);
+
+    let part_2 = input
+        .lines()
+        .map(|line| {
+            Game::parse(line)
+                .unwrap()
+                .fewest_required_cubes_of_each_colour()
+                .power_set()
+        })
+        .sum::<u32>();
+    dbg!(part_2);
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -58,6 +69,10 @@ impl Round {
 
         Ok(round)
     }
+
+    pub fn power_set(&self) -> u32 {
+        self.red as u32 * self.green as u32 * self.blue as u32
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -82,6 +97,31 @@ impl Game {
             .collect();
 
         Ok(Self { id, rounds })
+    }
+
+    pub fn fewest_required_cubes_of_each_colour(&self) -> Round {
+        self.rounds.iter().fold(
+            Round {
+                red: 0,
+                green: 0,
+                blue: 0,
+            },
+            |mut acc, round| {
+                if round.red > acc.red {
+                    acc.red = round.red;
+                }
+
+                if round.green > acc.green {
+                    acc.green = round.green;
+                }
+
+                if round.blue > acc.blue {
+                    acc.blue = round.blue;
+                }
+
+                acc
+            },
+        )
     }
 }
 
@@ -135,5 +175,48 @@ mod tests {
                 ])
             }
         );
+    }
+
+    #[test]
+    fn should_produce_fewest_required_cubes_of_each_colour() {
+        assert_eq!(
+            crate::Game::parse("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green")
+                .unwrap()
+                .fewest_required_cubes_of_each_colour(),
+            crate::Round {
+                red: 4,
+                green: 2,
+                blue: 6
+            }
+        );
+        assert_eq!(
+            crate::Game::parse("Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue")
+                .unwrap()
+                .fewest_required_cubes_of_each_colour(),
+            crate::Round {
+                red: 1,
+                green: 3,
+                blue: 4
+            }
+        );
+    }
+
+    #[test]
+    fn should_power_set() {
+        let round = crate::Round {
+            red: 4,
+            green: 2,
+            blue: 6,
+        };
+
+        assert_eq!(round.power_set(), 48);
+
+        let round = crate::Round {
+            red: 1,
+            green: 3,
+            blue: 4,
+        };
+
+        assert_eq!(round.power_set(), 12);
     }
 }
