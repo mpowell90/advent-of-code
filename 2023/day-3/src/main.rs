@@ -3,11 +3,18 @@ use std::collections::{BTreeMap, HashSet};
 fn main() {
     let input = include_str!("./input.txt");
     let schematic = Schematic::parse(input).unwrap();
+
     let part_1 = schematic
         .find_valid_part_numbers()
         .into_iter()
         .sum::<usize>();
     dbg!(part_1);
+
+    let part_2 = schematic
+        .find_valid_gear_ratios()
+        .into_iter()
+        .sum::<usize>();
+    dbg!(part_2);
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
@@ -22,9 +29,21 @@ impl Coord {
     }
 }
 
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct Symbol {
+    coord: Coord,
+    ch: char,
+}
+
+impl Symbol {
+    pub fn new(coord: Coord, ch: char) -> Self {
+        Self { coord, ch }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Schematic {
-    pub symbols: Vec<Coord>,
+    pub symbols: Vec<Symbol>,
     pub numbers: Vec<usize>,
     pub number_lookup: BTreeMap<Coord, usize>,
 }
@@ -61,7 +80,7 @@ impl Schematic {
                         }
 
                         if ch != '.' {
-                            symbols.push(Coord::new(row, column));
+                            symbols.push(Symbol::new(Coord::new(row, column), ch));
                         }
                     }
                 }
@@ -87,53 +106,53 @@ impl Schematic {
     pub fn find_valid_part_numbers(&self) -> Vec<usize> {
         let mut part_number_index_log: HashSet<usize> = HashSet::new();
 
-        for coord in self.symbols.iter() {
+        for symbol in self.symbols.iter() {
             if let Some(top_left) = self
                 .number_lookup
-                .get(&Coord::new(coord.row - 1, coord.column - 1))
+                .get(&Coord::new(symbol.coord.row - 1, symbol.coord.column - 1))
             {
                 part_number_index_log.insert(*top_left);
             }
             if let Some(top_middle) = self
                 .number_lookup
-                .get(&Coord::new(coord.row - 1, coord.column))
+                .get(&Coord::new(symbol.coord.row - 1, symbol.coord.column))
             {
                 part_number_index_log.insert(*top_middle);
             }
             if let Some(top_right) = self
                 .number_lookup
-                .get(&Coord::new(coord.row - 1, coord.column + 1))
+                .get(&Coord::new(symbol.coord.row - 1, symbol.coord.column + 1))
             {
                 part_number_index_log.insert(*top_right);
             }
             if let Some(left) = self
                 .number_lookup
-                .get(&Coord::new(coord.row, coord.column - 1))
+                .get(&Coord::new(symbol.coord.row, symbol.coord.column - 1))
             {
                 part_number_index_log.insert(*left);
             }
-            // middle will always be current coord
+            // middle will always be the current symbol
             if let Some(right) = self
                 .number_lookup
-                .get(&Coord::new(coord.row, coord.column + 1))
+                .get(&Coord::new(symbol.coord.row, symbol.coord.column + 1))
             {
                 part_number_index_log.insert(*right);
             }
             if let Some(bottom_left) = self
                 .number_lookup
-                .get(&Coord::new(coord.row + 1, coord.column - 1))
+                .get(&Coord::new(symbol.coord.row + 1, symbol.coord.column - 1))
             {
                 part_number_index_log.insert(*bottom_left);
             }
             if let Some(bottom_middle) = self
                 .number_lookup
-                .get(&Coord::new(coord.row + 1, coord.column))
+                .get(&Coord::new(symbol.coord.row + 1, symbol.coord.column))
             {
                 part_number_index_log.insert(*bottom_middle);
             }
             if let Some(bottom_right) = self
                 .number_lookup
-                .get(&Coord::new(coord.row + 1, coord.column + 1))
+                .get(&Coord::new(symbol.coord.row + 1, symbol.coord.column + 1))
             {
                 part_number_index_log.insert(*bottom_right);
             }
@@ -143,6 +162,74 @@ impl Schematic {
             .into_iter()
             .map(|idx| self.numbers[idx])
             .collect()
+    }
+
+    fn find_valid_gear_ratios(&self) -> Vec<usize> {
+        let mut gear_ratios = vec![];
+
+        for symbol in self.symbols.iter().filter(|symbol| symbol.ch == '*') {
+            let mut part_number_index_log: HashSet<usize> = HashSet::new();
+
+            if let Some(top_left) = self
+                .number_lookup
+                .get(&Coord::new(symbol.coord.row - 1, symbol.coord.column - 1))
+            {
+                part_number_index_log.insert(*top_left);
+            }
+            if let Some(top_middle) = self
+                .number_lookup
+                .get(&Coord::new(symbol.coord.row - 1, symbol.coord.column))
+            {
+                part_number_index_log.insert(*top_middle);
+            }
+            if let Some(top_right) = self
+                .number_lookup
+                .get(&Coord::new(symbol.coord.row - 1, symbol.coord.column + 1))
+            {
+                part_number_index_log.insert(*top_right);
+            }
+            if let Some(left) = self
+                .number_lookup
+                .get(&Coord::new(symbol.coord.row, symbol.coord.column - 1))
+            {
+                part_number_index_log.insert(*left);
+            }
+            // middle will always be the current symbol
+            if let Some(right) = self
+                .number_lookup
+                .get(&Coord::new(symbol.coord.row, symbol.coord.column + 1))
+            {
+                part_number_index_log.insert(*right);
+            }
+            if let Some(bottom_left) = self
+                .number_lookup
+                .get(&Coord::new(symbol.coord.row + 1, symbol.coord.column - 1))
+            {
+                part_number_index_log.insert(*bottom_left);
+            }
+            if let Some(bottom_middle) = self
+                .number_lookup
+                .get(&Coord::new(symbol.coord.row + 1, symbol.coord.column))
+            {
+                part_number_index_log.insert(*bottom_middle);
+            }
+            if let Some(bottom_right) = self
+                .number_lookup
+                .get(&Coord::new(symbol.coord.row + 1, symbol.coord.column + 1))
+            {
+                part_number_index_log.insert(*bottom_right);
+            }
+
+            if part_number_index_log.len() == 2 {
+                gear_ratios.push(
+                    part_number_index_log
+                        .into_iter()
+                        .fold(1, |acc, item| acc * self.numbers[item]),
+                );
+            }
+        }
+
+        gear_ratios
     }
 }
 
@@ -171,7 +258,7 @@ mod tests {
         assert_eq!(
             crate::Schematic::parse(".....+.58.").unwrap(),
             crate::Schematic {
-                symbols: vec![crate::Coord::new(0, 5)],
+                symbols: vec![crate::Symbol::new(crate::Coord::new(0, 5), '+')],
                 numbers: vec![58],
                 number_lookup: std::collections::BTreeMap::from([
                     (crate::Coord::new(0, 7), 0),
@@ -182,7 +269,10 @@ mod tests {
         assert_eq!(
             crate::Schematic::parse("...$.*....").unwrap(),
             crate::Schematic {
-                symbols: vec![crate::Coord::new(0, 3), crate::Coord::new(0, 5)],
+                symbols: vec![
+                    crate::Symbol::new(crate::Coord::new(0, 3), '$'),
+                    crate::Symbol::new(crate::Coord::new(0, 5), '*')
+                ],
                 numbers: vec![],
                 number_lookup: std::collections::BTreeMap::new(),
             }
@@ -212,5 +302,15 @@ mod tests {
         correct.sort();
 
         assert_eq!(part_numbers, correct);
+    }
+
+    #[test]
+    fn should_find_gear_ratios() {
+        assert_eq!(
+            crate::Schematic::parse(EXAMPLE1)
+                .unwrap()
+                .find_valid_gear_ratios(),
+            vec![16345, 451490]
+        );
     }
 }
