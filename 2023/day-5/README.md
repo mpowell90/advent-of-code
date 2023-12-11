@@ -104,3 +104,5 @@ Seed 13, soil 13, fertilizer 52, water 41, light 34, temperature 34, humidity 35
 So, the lowest location number in this example is 35.
 
 What is the lowest location number that corresponds to any of the initial seed numbers?
+
+Your puzzle answer was 282277027.
