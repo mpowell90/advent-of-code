@@ -4,6 +4,10 @@ fn main() {
     let competition = Competition::parse(input);
     let part_1 = competition.calculate_margin_of_error();
     dbg!(part_1);
+
+    let competition = Competition::parse_ignore_kerning(input);
+    let part_2 = competition.races[0].calculate_winning_races().len();
+    dbg!(part_2);
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -62,6 +66,42 @@ impl Competition {
         Self { races }
     }
 
+    pub fn parse_ignore_kerning(input: &str) -> Self {
+        let input_parts = input.split_terminator('\n').collect::<Vec<&str>>();
+
+        let times = input_parts[0]
+            .split_terminator(':')
+            .skip(1)
+            .map(|result_items| {
+                result_items
+                    .trim()
+                    .replace(' ', "")
+                    .parse::<usize>()
+                    .unwrap()
+            })
+            .collect::<Vec<usize>>();
+
+        let distances = input_parts[1]
+            .split_terminator(':')
+            .skip(1)
+            .map(|result_items| {
+                result_items
+                    .trim()
+                    .replace(' ', "")
+                    .parse::<usize>()
+                    .unwrap()
+            })
+            .collect::<Vec<usize>>();
+
+        let races = times
+            .into_iter()
+            .zip(distances)
+            .map(|(time, distance)| Race::new(time, distance))
+            .collect();
+
+        Self { races }
+    }
+
     pub fn calculate_margin_of_error(&self) -> usize {
         self.races.iter().fold(1, |mut acc, race| {
             acc *= race.calculate_winning_races().len();
@@ -82,6 +122,18 @@ mod tests {
                     crate::Race::new(7, 9),
                     crate::Race::new(15, 40),
                     crate::Race::new(30, 200)
+                ]
+            }
+        );
+    }
+
+    #[test]
+    fn should_parse_competition_ignoring_kerning() {
+        assert_eq!(
+            crate::Competition::parse_ignore_kerning(EXAMPLE1),
+            crate::Competition {
+                races: vec![
+                    crate::Race::new(71530, 940200)
                 ]
             }
         );
