@@ -8,6 +8,9 @@ fn main() {
     let map = Map::parse(input);
     let part_1 = map.calculate_steps_to_traverse();
     dbg!(part_1);
+
+    let part_2 = map.calculate_steps_to_traverse_in_parallel();
+    dbg!(part_2);
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -110,6 +113,49 @@ impl Map {
             } else {
                 panic!("fail!")
             }
+        }
+
+        steps
+    }
+
+    pub fn calculate_steps_to_traverse_in_parallel(&self) -> usize {
+        let mut instructions = self.instructions.clone();
+        let mut steps = 0;
+
+        let mut paths = self
+            .network
+            .keys()
+            .filter(|key| key.ends_with('A'))
+            .cloned()
+            .collect::<Vec<String>>();
+
+        while !paths.iter().all(|string| string.ends_with('Z')) {
+            // dbg!(&paths);
+            // dbg!(paths.iter().all(|string| string.ends_with('Z')));
+
+            let next_instruction = if let Some(next_instruction) = instructions.pop_front() {
+                next_instruction
+            } else {
+                instructions = self.instructions.clone();
+                instructions.pop_front().unwrap()
+            };
+
+            // dbg!(&next_instruction);
+
+            for address in paths.iter_mut() {
+                let network_segment = self.network.get(address).unwrap();
+
+                let next_address = match next_instruction {
+                    InstructionKind::Left => network_segment.left.to_owned(),
+                    InstructionKind::Right => network_segment.right.to_owned(),
+                };
+
+                *address = next_address;
+            }
+
+            dbg!(steps);
+
+            steps += 1;
         }
 
         steps
