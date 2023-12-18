@@ -4,8 +4,11 @@ fn main() {
     let input = include_str!("./input.txt");
 
     let sensor = Sensor::parse(input);
-    let part_1 = sensor.sum_extrapolated_values();
+    let part_1 = sensor.sum_extrapolated_next_values();
     dbg!(part_1);
+
+    let part_2 = sensor.sum_extrapolated_previous_values();
+    dbg!(part_2);
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -22,7 +25,7 @@ impl SensorValue {
         Self { history }
     }
 
-    pub fn predict_next_step(&self) -> isize {
+    pub fn process_history(&self) -> Vec<Vec<isize>> {
         let mut levels: Vec<Vec<isize>> = vec![self.history.clone()];
         let mut current_level_idx = 0;
         let mut idx = 1;
@@ -62,6 +65,21 @@ impl SensorValue {
         }
 
         levels
+    }
+
+    pub fn predict_previous_step(&self) -> isize {
+        let levels = self.process_history();
+
+        levels
+            .into_iter()
+            .rev()
+            .fold(0_isize, |acc, item| -acc + item[0])
+    }
+
+    pub fn predict_next_step(&self) -> isize {
+        let levels = self.process_history();
+
+        levels
             .into_iter()
             .rev()
             .fold(0_isize, |acc, item| acc + item[item.len() - 1])
@@ -82,7 +100,11 @@ impl Sensor {
         Self { values }
     }
 
-    pub fn sum_extrapolated_values(&self) -> isize {
+    pub fn sum_extrapolated_previous_values(&self) -> isize {
+        self.values.iter().map(|item| item.predict_previous_step()).sum()
+    }
+
+    pub fn sum_extrapolated_next_values(&self) -> isize {
         self.values.iter().map(|item| item.predict_next_step()).sum()
     }
 }
@@ -119,7 +141,19 @@ mod tests {
     }
 
     #[test]
-    fn should_extrapolate_values() {
-        assert_eq!(example_sensor().sum_extrapolated_values(), 114);
+    fn should_extrapolate_next_values() {
+        assert_eq!(example_sensor().sum_extrapolated_next_values(), 114);
+    }
+
+    #[test]
+    fn should_predict_previous_step() {
+        assert_eq!(example_sensor().values[0].predict_previous_step(), -3);
+        assert_eq!(example_sensor().values[1].predict_previous_step(), 0);
+        assert_eq!(example_sensor().values[2].predict_previous_step(), 5);
+    }
+
+    #[test]
+    fn should_extrapolate_previous_values() {
+        assert_eq!(example_sensor().sum_extrapolated_previous_values(), 2);
     }
 }
