@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 static EXAMPLE1: &str = ".....\n.F-7.\n.|.|.\n.L-J.\n.....";
 static EXAMPLE2: &str = ".....\n.S-7.\n.|.|.\n.L-J.\n.....";
@@ -10,6 +10,9 @@ fn main() {
 
     let part_1 = map.find_steps_to_farthest_point();
     dbg!(part_1);
+
+    let part_2 = map.find_enclosed_tiles_count();
+    dbg!(part_2);
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
@@ -176,12 +179,12 @@ impl PipeKind {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Coord {
-    row: usize,
-    column: usize,
+    row: isize,
+    column: isize,
 }
 
 impl Coord {
-    pub fn new(row: usize, column: usize) -> Self {
+    pub fn new(row: isize, column: isize) -> Self {
         Self { row, column }
     }
 
@@ -214,8 +217,8 @@ impl Coord {
     }
 
     pub fn get_direction_traversed(&self, next: Self) -> Result<Direction, String> {
-        let row = next.row as isize - self.row as isize;
-        let column = next.column as isize - self.column as isize;
+        let row = next.row - self.row;
+        let column = next.column - self.column;
 
         if row == -1 {
             Ok(Direction::North)
@@ -235,16 +238,20 @@ impl Coord {
 pub struct Map {
     pub start_position: Option<Coord>,
     pub lookup: BTreeMap<Coord, PipeKind>,
+    pub row_count: usize,
+    pub column_count: usize,
 }
 
 impl Map {
     pub fn parse(input: &str) -> Self {
         let mut lookup: BTreeMap<Coord, PipeKind> = BTreeMap::new();
         let mut start_position: Option<Coord> = None;
+        let row_count = input.lines().count();
+        let column_count = input.len() / row_count;
 
         for (row, line) in input.lines().enumerate() {
             for (column, char) in line.chars().enumerate() {
-                let coord = Coord::new(row, column);
+                let coord = Coord::new(row as isize, column as isize);
                 let pipe_kind: PipeKind = char.try_into().unwrap();
                 if pipe_kind == PipeKind::Start {
                     start_position = Some(coord);
@@ -253,13 +260,18 @@ impl Map {
             }
         }
 
+        dbg!(row_count);
+        dbg!(column_count);
+
         Self {
             start_position,
             lookup,
+            row_count,
+            column_count,
         }
     }
 
-    pub fn find_steps_to_farthest_point(&self) -> usize {
+    pub fn find_path(&self) -> Vec<Coord> {
         let mut path = Vec::from([self.start_position.unwrap()]);
         let mut is_path_found = false;
         let mut path_idx = 0;
@@ -297,7 +309,27 @@ impl Map {
             }
         }
 
+        path
+    }
+
+    pub fn find_steps_to_farthest_point(&self) -> usize {
+        let path = self.find_path();
         path.len() / 2
+    }
+
+    pub fn find_enclosed_tiles_count(&self) -> usize {
+        let path = self.find_path();
+        let coords_in_path = BTreeSet::from_iter(path.clone());
+        let all_coords: BTreeSet<Coord> = self.lookup.keys().cloned().collect();
+        let enclosed_coords = all_coords
+            .difference(&coords_in_path)
+            .filter(|coord| {
+                path.iter().any(|coord_in_path| {
+                    coord_in_path.row == coord.row || coord_in_path.column == coord.column
+                })
+            })
+            .collect::<Vec<&Coord>>();
+        enclosed_coords.len()
     }
 }
 
@@ -336,7 +368,9 @@ mod tests {
                     (Coord::new(4, 2), PipeKind::Ground),
                     (Coord::new(4, 3), PipeKind::Ground),
                     (Coord::new(4, 4), PipeKind::Ground),
-                ])
+                ]),
+                row_count: 5,
+                column_count: 5
             }
         );
     }
@@ -371,6 +405,8 @@ mod tests {
                 (Coord::new(4, 3), PipeKind::Ground),
                 (Coord::new(4, 4), PipeKind::Ground),
             ]),
+            row_count: 5,
+            column_count: 5,
         }
     }
 
