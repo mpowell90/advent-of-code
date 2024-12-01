@@ -37,20 +37,17 @@ fn calculate_similarity_score(input: &str) -> usize {
     let (left_values, right_values): (Vec<usize>, Vec<usize>) =
         split_input_into_pairs(input).unzip();
 
-    let left_lookup = left_values.iter().fold(
-        HashMap::new(),
-        |mut acc: HashMap<usize, usize>, left_value| {
-            let right_count = right_values.iter().filter(|&x| x == left_value).count();
-
-            *acc.entry(*left_value).or_insert(0) += right_count;
-
-            acc
-        },
-    );
+    let right_lookup =
+        right_values
+            .into_iter()
+            .fold(HashMap::new(), |mut acc: HashMap<usize, usize>, val| {
+                *acc.entry(val).or_default() += 1;
+                acc
+            });
 
     let similarity_score = left_values
         .into_iter()
-        .map(|val| val * left_lookup.get(&val).unwrap_or(&0))
+        .map(|val| val * right_lookup.get(&val).unwrap_or(&0))
         .sum();
 
     similarity_score
