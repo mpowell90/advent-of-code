@@ -10,18 +10,21 @@ fn main() {
     println!("Part 2 similarity score: {}", similarity_score);
 }
 
-fn split_input_into_pairs(input: &str) -> impl Iterator<Item = (usize, usize)> + '_ {
-    input.lines().map(|line| {
-        let mut iter = line.split_ascii_whitespace();
-        let left = iter.next().unwrap().parse().unwrap();
-        let right = iter.next().unwrap().parse().unwrap();
-        (left, right)
-    })
+fn split_input_into_pairs(input: &str) -> (Vec<usize>, Vec<usize>) {
+    input
+        .lines()
+        .map(|line| {
+            let mut iter = line.split_ascii_whitespace();
+            let left: usize = iter.next().unwrap().parse().unwrap();
+            let right: usize = iter.next().unwrap().parse().unwrap();
+            (left, right)
+        })
+        .unzip()
 }
 
 fn calculate_total_distance(input: &str) -> isize {
     let (mut left_values, mut right_values): (Vec<usize>, Vec<usize>) =
-        split_input_into_pairs(input).unzip();
+        split_input_into_pairs(input);
 
     left_values.sort();
     right_values.sort();
@@ -34,8 +37,7 @@ fn calculate_total_distance(input: &str) -> isize {
 }
 
 fn calculate_similarity_score(input: &str) -> usize {
-    let (left_values, right_values): (Vec<usize>, Vec<usize>) =
-        split_input_into_pairs(input).unzip();
+    let (left_values, right_values): (Vec<usize>, Vec<usize>) = split_input_into_pairs(input);
 
     let right_lookup =
         right_values
