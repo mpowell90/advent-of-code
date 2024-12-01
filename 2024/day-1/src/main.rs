@@ -1,19 +1,13 @@
-use std::collections::{hash_map::Entry, HashMap};
+use std::collections::HashMap;
 
 fn main() {
     let input = include_str!("./input.txt");
 
     let total_distance = calculate_total_distance(input);
-    println!(
-        "Part 1 total distance: {}",
-        total_distance
-    );
+    println!("Part 1 total distance: {}", total_distance);
 
     let similarity_score = calculate_similarity_score(input);
-    println!(
-        "Part 2 similarity score: {}",
-        similarity_score
-    );
+    println!("Part 2 similarity score: {}", similarity_score);
 }
 
 fn split_input_into_pairs(input: &str) -> impl Iterator<Item = (usize, usize)> + '_ {
@@ -47,14 +41,9 @@ fn calculate_similarity_score(input: &str) -> usize {
         HashMap::new(),
         |mut acc: HashMap<usize, usize>, left_value| {
             let right_count = right_values.iter().filter(|&x| x == left_value).count();
-            match acc.entry(*left_value) {
-                Entry::Occupied(mut occupied_entry) => {
-                    *occupied_entry.get_mut() += right_count;
-                }
-                Entry::Vacant(vacant_entry) => {
-                    vacant_entry.insert_entry(right_count);
-                }
-            }
+
+            *acc.entry(*left_value).or_insert(0) += right_count;
+
             acc
         },
     );
