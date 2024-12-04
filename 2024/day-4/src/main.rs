@@ -2,7 +2,6 @@ fn main() {
     let input = include_str!("./input.txt");
 
     println!("Part 1: {}", WordSearch::parse(input).search_all());
-    // println!("Part 2: {}", part_2(input));
 }
 
 #[derive(Debug)]
@@ -26,7 +25,6 @@ impl WordSearch {
     }
 
     pub fn matcher(&self, ch: char, current_count: &mut usize, found: &mut usize) {
-        // println!("current_count: {}", current_count);
         match ch {
             'X' => {
                 *current_count = 1;
@@ -141,7 +139,6 @@ impl WordSearch {
             //     "row {}, col {}, ch {}",
             //     row_offset, col_offset, self.chars[row_offset as usize][col_offset as usize]
             // );
-
             self.matcher(
                 self.chars[row_offset as usize][col_offset as usize],
                 &mut current_count,
