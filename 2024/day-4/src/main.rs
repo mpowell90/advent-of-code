@@ -1,7 +1,8 @@
 fn main() {
     let input = include_str!("./input.txt");
 
-    println!("Part 1: {}", WordSearch::parse(input).search_all());
+    // println!("Part 1: {}", WordSearch::parse(input).search_for_all_xmas());
+    println!("Part 2: {}", WordSearch::parse(input).search_for_mas());
 }
 
 #[derive(Debug)]
@@ -24,7 +25,7 @@ impl WordSearch {
         }
     }
 
-    pub fn matcher(&self, ch: char, current_count: &mut usize, found: &mut usize) {
+    pub fn part_1_matcher(&self, ch: char, current_count: &mut usize, found: &mut usize) {
         match ch {
             'X' => {
                 *current_count = 1;
@@ -45,7 +46,7 @@ impl WordSearch {
         }
     }
 
-    pub fn search_all(&self) -> usize {
+    pub fn search_for_all_xmas(&self) -> usize {
         let mut found = 0;
 
         found += self.search_east();
@@ -66,7 +67,7 @@ impl WordSearch {
 
         for row in 0..self.row_count {
             for col in 0..self.col_count {
-                self.matcher(self.chars[row][col], &mut current_count, &mut found);
+                self.part_1_matcher(self.chars[row][col], &mut current_count, &mut found);
             }
             current_count = 0;
         }
@@ -82,7 +83,7 @@ impl WordSearch {
 
         for row in 0..self.row_count {
             for col in (0..self.col_count).rev() {
-                self.matcher(self.chars[row][col], &mut current_count, &mut found);
+                self.part_1_matcher(self.chars[row][col], &mut current_count, &mut found);
             }
             current_count = 0;
         }
@@ -98,7 +99,7 @@ impl WordSearch {
 
         for col in 0..self.col_count {
             for row in 0..self.row_count {
-                self.matcher(self.chars[row][col], &mut current_count, &mut found);
+                self.part_1_matcher(self.chars[row][col], &mut current_count, &mut found);
             }
             current_count = 0;
         }
@@ -114,7 +115,7 @@ impl WordSearch {
 
         for col in (0..self.col_count).rev() {
             for row in (0..self.row_count).rev() {
-                self.matcher(self.chars[row][col], &mut current_count, &mut found);
+                self.part_1_matcher(self.chars[row][col], &mut current_count, &mut found);
             }
             current_count = 0;
         }
@@ -139,7 +140,7 @@ impl WordSearch {
             //     "row {}, col {}, ch {}",
             //     row_offset, col_offset, self.chars[row_offset as usize][col_offset as usize]
             // );
-            self.matcher(
+            self.part_1_matcher(
                 self.chars[row_offset as usize][col_offset as usize],
                 &mut current_count,
                 &mut found,
@@ -186,7 +187,7 @@ impl WordSearch {
             //     row_offset, col_offset, self.chars[row_offset as usize][col_offset as usize]
             // );
 
-            self.matcher(
+            self.part_1_matcher(
                 self.chars[row_offset as usize][col_offset as usize],
                 &mut current_count,
                 &mut found,
@@ -235,15 +236,13 @@ impl WordSearch {
             //     row_offset, col_offset, self.chars[row_offset as usize][col_offset as usize]
             // );
 
-            self.matcher(
+            self.part_1_matcher(
                 self.chars[row_offset as usize][col_offset as usize],
                 &mut current_count,
                 &mut found,
             );
 
-            if col_offset == self.col_count as isize - 1
-                || row_offset == 0
-            {
+            if col_offset == self.col_count as isize - 1 || row_offset == 0 {
                 if last_start_col > 0 {
                     last_start_col -= 1;
                     row_offset = self.row_count as isize - 1;
@@ -284,15 +283,13 @@ impl WordSearch {
             //     row_offset, col_offset, self.chars[row_offset as usize][col_offset as usize]
             // );
 
-            self.matcher(
+            self.part_1_matcher(
                 self.chars[row_offset as usize][col_offset as usize],
                 &mut current_count,
                 &mut found,
             );
 
-            if col_offset == 0
-                || row_offset == self.row_count as isize - 1
-            {
+            if col_offset == 0 || row_offset == self.row_count as isize - 1 {
                 if last_start_col < self.col_count as isize - 1 {
                     last_start_col += 1;
                     row_offset = 0;
@@ -313,6 +310,61 @@ impl WordSearch {
         }
 
         println!("search_south_west found: {}", found);
+
+        found
+    }
+
+    pub fn search_for_mas(&self) -> usize {
+        let mut found = 0;
+
+        for row in 0..self.row_count {
+            for col in 0..self.col_count {
+                // outer bounds can be skipped
+                if row == 0
+                    || col == 0
+                    || row == self.row_count - 1
+                    || col == self.col_count - 1
+                    || self.chars[row][col] != 'A'
+                {
+                    continue;
+                }
+
+                let mut m_count = 0;
+                let mut s_count = 0;
+
+                for ch in [
+                    self.chars[row - 1][col - 1],
+                    self.chars[row - 1][col + 1],
+                    self.chars[row + 1][col - 1],
+                    self.chars[row + 1][col + 1],
+                ] {
+                    match ch {
+                        'M' => m_count += 1,
+                        'S' => s_count += 1,
+                        _ => {}
+                    }
+                }
+
+                // must omit if opposite corners are the same
+                if m_count == 2
+                    && s_count == 2
+                    && (self.chars[row - 1][col - 1] != self.chars[row + 1][col + 1]
+                        || self.chars[row - 1][col + 1] != self.chars[row + 1][col - 1])
+                {
+                    // println!(
+                    //     "row: {}, col: {}\n{}.{}\n.{}.\n{}.{}",
+                    //     row,
+                    //     col,
+                    //     self.chars[row - 1][col - 1],
+                    //     self.chars[row - 1][col + 1],
+                    //     self.chars[row][col],
+                    //     self.chars[row + 1][col - 1],
+                    //     self.chars[row + 1][col + 1]
+                    // );
+                    found += 1;
+                }
+            }
+        }
 
         found
     }
@@ -397,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn should_find_all() {
+    fn should_search_for_all_xmas() {
         const EXAMPLE_1: &str = "....XXMAS.\n\
                                  .SAMXMS...\n\
                                  ...S..A...\n\
@@ -414,6 +466,22 @@ mod tests {
         assert_eq!(WordSearch::parse(EXAMPLE_1).search_north_east(), 4);
         assert_eq!(WordSearch::parse(EXAMPLE_1).search_south_west(), 1);
 
-        assert_eq!(WordSearch::parse(EXAMPLE_1).search_all(), 18);
+        assert_eq!(WordSearch::parse(EXAMPLE_1).search_for_all_xmas(), 18);
+    }
+
+    #[test]
+    fn should_search_for_mas() {
+        const EXAMPLE: &str = ".M.S......\n\
+                               ..A..MSMS.\n\
+                               .M.S.MAA..\n\
+                               ..A.ASMSM.\n\
+                               .M.S.M....\n\
+                               ..........\n\
+                               S.S.S.S.S.\n\
+                               .A.A.A.A..\n\
+                               M.M.M.M.M.\n\
+                               ..........";
+
+        assert_eq!(WordSearch::parse(EXAMPLE).search_for_mas(), 9);
     }
 }
