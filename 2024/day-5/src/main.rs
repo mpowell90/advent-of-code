@@ -26,7 +26,7 @@ impl Update {
             .all(|(current_page_idx, current_page)| {
                 ordering_rules
                     .get(current_page)
-                    .map_or(false, |lookup_list| {
+                    .map_or(true, |lookup_list| {
                         lookup_list.iter().all(|item| {
                             !self.pages[0..self.pages.len() - current_page_idx - 1].contains(item)
                         })
