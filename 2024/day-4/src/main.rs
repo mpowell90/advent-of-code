@@ -1,7 +1,8 @@
 fn main() {
     let input = include_str!("./input.txt");
 
-    // println!("Part 1: {}", WordSearch::parse(input).search_for_all_xmas());
+    println!("Part 1: {}", WordSearch::parse(input).search_for_all_xmas());
+    
     println!("Part 2: {}", WordSearch::parse(input).search_for_mas());
 }
 
