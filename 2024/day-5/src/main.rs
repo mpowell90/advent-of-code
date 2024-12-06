@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 fn main() {
     let input = include_str!("./input.txt");
@@ -32,6 +32,32 @@ impl Update {
                         })
                     })
             })
+    }
+
+    pub fn reorder(&self, ordering_rules: &HashMap<usize, Vec<usize>>) -> Vec<usize> {
+        let mut next_pages: VecDeque<usize> = VecDeque::with_capacity(self.pages.len());
+        let mut current_idx = 0;
+
+        let mut is_ordered = false;
+
+        while next_pages.len() != self.pages.len() {
+            if current_idx
+            for (current_page_idx, current_page) in self.pages.iter().rev().enumerate() {
+                if let Some(lookup_list) = ordering_rules.get(current_page) {
+                    // for item in lookup_list {
+                    //     if !pages[0..pages.len() - current_page_idx - 1].contains(item) {
+                    //         next_pages.push(*item);
+                    //         break;
+                    //     }
+                    // }
+                }
+            }
+
+            // pages = next_pages.clone();
+            // next_pages.clear();
+        }
+
+        next_pages.into()
     }
 }
 
@@ -73,6 +99,17 @@ impl SafetyManual {
             .iter()
             .filter(|update| update.is_ordered(&self.ordering_rules))
             .map(|update| update.pages[(update.pages.len() as f32 / 2.0).floor() as usize])
+            .sum()
+    }
+
+    pub fn part_2(&self) -> usize {
+        self.updates
+            .iter()
+            .filter(|update| update.is_ordered(&self.ordering_rules))
+            .map(|update| {
+                update.reorder(&self.ordering_rules)
+                    [(update.pages.len() as f32 / 2.0).floor() as usize]
+            })
             .sum()
     }
 }
@@ -126,5 +163,23 @@ mod tests {
     fn should_sum_middle_numbers() {
         let safety_manual = SafetyManual::parse(EXAMPLE);
         assert_eq!(safety_manual.part_1(), 143);
+    }
+
+    #[test]
+    fn should_reorder() {
+        let safety_manual = SafetyManual::parse(EXAMPLE);
+
+        assert_eq!(
+            safety_manual.updates[3].reorder(&safety_manual.ordering_rules),
+            vec![97, 75, 47, 61, 53]
+        );
+        // assert_eq!(
+        //     safety_manual.updates[4].reorder(&safety_manual.ordering_rules),
+        //     vec![61, 29, 13]
+        // );
+        // assert_eq!(
+        //     safety_manual.updates[5].reorder(&safety_manual.ordering_rules),
+        //     vec![97, 75, 47, 29, 13]
+        // );
     }
 }
